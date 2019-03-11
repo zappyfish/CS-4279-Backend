@@ -24,7 +24,7 @@ class GraphSession:
                 if choice is None:
                     choice = node
                 else:
-                    if len(node.dependers) > len(choice.dependers):
+                    if len(node.dependers) > len(choice.dependers):  # TODO: Should check recursively for dependers
                         choice = node
         return choice
 
