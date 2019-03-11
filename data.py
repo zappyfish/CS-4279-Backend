@@ -62,6 +62,7 @@ class StudyNode:
         self.dependers = []
 
 
+# TODO: On a different branch, try building the graph based on criteria dependencies and not based on studies
 class StudyGraph:
 
     def __init__(self):
@@ -92,7 +93,7 @@ class StudyGraph:
     def _build_dependencies(self, dependency_node):
         for node in self.nodes:
             if node is not dependency_node:
-                if node.study.has_dependency(dependency_node):
+                if node.study.has_dependency(dependency_node.study):
                     node.dependencies.append(dependency_node)
                     dependency_node.dependers.append(node)
 
@@ -105,9 +106,9 @@ class StudyGraph:
                 if num_criteria < min_criteria:
                     min_criteria = num_criteria
                     next_nodes.clear()
-                    next_nodes.append(min_criteria)
+                    next_nodes.append(node)
                 elif num_criteria == min_criteria:
-                    next_nodes.append(min_criteria)
+                    next_nodes.append(node)
         for node in next_nodes:
             checked.add(node)
         return next_nodes
