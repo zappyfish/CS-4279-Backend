@@ -3,10 +3,10 @@ from data import Study
 
 class StudyMatcher:
 
-    FAKE_DATA = [Study('Cancer', 'Vanderbilt University', 'Rachael Greene, MD', 'This study is about cancer and lorum ipsum'),
-                 Study('Metatarsal Fracture', 'PSG', 'Neymar Jr., MD', 'This study is about metatarsal fractures and lorum ipsum'),
-                 Study('Ankle Ligament Damage', 'Spurs', '\'Arry Kane, MD', 'This study is about ankle ligament damage and lorum ipsum'),
-                 Study('Delusion', 'Man City', 'Fraudiola', 'This study is about delusion and lorum ipsum')
+    FAKE_DATA = [Study('Cancer', 'Vanderbilt University', 'Rachael Greene, MD', 'This study is about cancer and lorum ipsum', []),
+                 Study('Metatarsal Fracture', 'PSG', 'Neymar Jr., MD', 'This study is about metatarsal fractures and lorum ipsum', []),
+                 Study('Ankle Ligament Damage', 'Spurs', '\'Arry Kane, MD', 'This study is about ankle ligament damage and lorum ipsum', []),
+                 Study('Test', 'Test', 'Test', 'Test lorum ipsum', [])
                  #Study('class example', 'vanderbilt', 'liam', 'class demo')
                  ]
 

@@ -6,3 +6,6 @@ class Blockchain:
 
     def retrieve_studies(self):
         pass
+
+    def gen_graph_from_blockchain(self):
+        pass
