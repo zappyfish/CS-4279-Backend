@@ -67,6 +67,7 @@ class StudyGraph:
 
     def __init__(self):
         self.nodes = []
+        self.roots = []
 
     def add_study_node(self, study):
         self.nodes.append(study)
@@ -89,6 +90,15 @@ class StudyGraph:
             for node in next_nodes:
                 self._build_dependencies(node)
             next_nodes = self._get_next_nodes(checked)
+
+    def _construct_connections(self):
+        pass
+
+    def _find_roots(self):
+        pass
+
+    def _compute_recursive_dependencies(self):
+        pass
 
     def _build_dependencies(self, dependency_node):
         for node in self.nodes:

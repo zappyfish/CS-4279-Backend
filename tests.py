@@ -13,7 +13,7 @@ class TestPatient:
         self.option_vals = option_vals
 
     def matches(self, criterion):
-        
+
 
 
 def get_test_condition_names():
