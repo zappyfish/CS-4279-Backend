@@ -58,8 +58,14 @@ class StudyNode:
 
     def __init__(self, study):
         self.study = study
-        self.dependencies = []
+        self.dependencies = [] #TODO: change this to be a boolean to be more efficient
         self.dependers = []
+        self.recursive_dependers = 0
+
+    def _compute_recursive_dependenders(self):
+        for depender in self.dependers:
+            self.recursive_dependers += depender._compute_recursive_dependers()
+        return self.recursive_dependers
 
 
 # TODO: On a different branch, try building the graph based on criteria dependencies and not based on studies
@@ -95,10 +101,15 @@ class StudyGraph:
         pass
 
     def _find_roots(self):
-        pass
+        for node in self.nodes:
+            if not node.dependencies:
+                self.roots.append(node)
 
-    def _compute_recursive_dependencies(self):
-        pass
+    def _compute_all_dependencies(self):
+        for root in self.roots:
+            for depender in root.dependers:
+                root.recursive_dependers += depender._compute_recursive_dependers()
+
 
     def _build_dependencies(self, dependency_node):
         for node in self.nodes:
