@@ -18,7 +18,7 @@ class TestPatient:
 
 def get_test_condition_names():
     return [
-        'cancer',
+        'cancer', #TODO: will need to be expanded, likely to a nested condition or something of the sort
         'depression',
         'flu',
         'arthritis',
@@ -29,14 +29,20 @@ def get_test_condition_names():
         'heart_disease',
         'diabetes',
         'osteoperosis',
+        'pregnant',
+        'past_stroke',
+        'gluten_sensitivity',
+        'lactose_intolerance',
     ]
 
 
 def get_test_range_pairs():
     return {
         'age': [0, 100],
-        'blood_pressure': [50, 150],
+        'systolic_blood_pressure': [75, 200],
+        'diastolic_blood_pressure': [50, 150],
         'height_inches': [30, 90],
+        'weight_pounds': [50, 400]
     }
 
 
@@ -44,6 +50,7 @@ def get_test_condition_value_pairs():
     return {
         'eye_color': ['blue', 'brown', 'green'],
         'hair_color': ['blonde', 'brown', 'red'],
+        'relationship_status': ['single', 'married', 'other']
     }
 
 
