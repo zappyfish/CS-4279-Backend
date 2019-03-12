@@ -91,19 +91,18 @@ class StudyGraph:
         self.nodes = []
         self.roots = []
 
-    def add_study_node(self, study):
-        self.nodes.append(study)
-        self._rebuild_graph()
-
     def add_study_nodes(self, nodes):
         for node in nodes:
             self.nodes.append(node)
         self._rebuild_graph()
 
     def _rebuild_graph(self):
+        t0 = time.time()
         self._construct_connections()
         self._find_roots()
         self._compute_all_dependencies()
+        t1 = time.time()
+        print("Time to construct graph (s): " + str(t1 - t0))
 
     def _construct_connections(self):
         for node in self.nodes:
@@ -115,9 +114,10 @@ class StudyGraph:
         for node in self.nodes:
             heappush(node_queue, node)
 
+        # Now work backwards so that we can go from largest criteria and work towards the root, eliminating criteria
+        # along the way to make sure we don't have redundant edges
         while len(node_queue) > 0:
             self._build_dependencies(node_queue.pop(), node_queue)
-
 
     def _build_dependencies(self, dependent_node, node_queue):
         tmp_study_copy = dependent_node.study.get_temp_copy_for_criteria()
@@ -130,22 +130,6 @@ class StudyGraph:
                 tmp_study_copy.eliminate_dependency_criteria(node.study)
                 if len(tmp_study_copy.criteria) == 0:
                     return  # There are no criteria left, we've matched everything
-
-    def _get_next_nodes(self, checked):
-        next_nodes = []
-        min_criteria = float('inf')
-        for node in self.nodes:
-            if node not in checked:
-                num_criteria = len(node.study.criteria)
-                if num_criteria < min_criteria:
-                    min_criteria = num_criteria
-                    next_nodes.clear()
-                    next_nodes.append(node)
-                elif num_criteria == min_criteria:
-                    next_nodes.append(node)
-        for node in next_nodes:
-            checked.add(node)
-        return next_nodes
 
     def _find_roots(self):
         for node in self.nodes:

@@ -68,7 +68,7 @@ def get_test_condition_value_pairs():
 
 def get_test_graph():
     studies = []
-    for i in range(10000):
+    for i in range(1000):
         studies.append(StudyNode(get_random_study(i)))
     graph = StudyGraph()
     graph.add_study_nodes(studies)
