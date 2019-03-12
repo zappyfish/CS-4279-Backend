@@ -1,3 +1,5 @@
+from heapq import *
+import time
 
 class Criterion:
 
@@ -44,6 +46,14 @@ class Study:
             'criteria': self.criteria,
         }
 
+    def get_temp_copy_for_criteria(self):
+        copied_criteria = [self.criteria[key] for key in self.criteria]
+        return Study(None, None, None, None, copied_criteria)
+
+    def eliminate_dependency_criteria(self, dependency):
+        for criteria in dependency.criteria:
+            del self.criteria[criteria]
+
     def has_dependency(self, other):
         for name in other.criteria:
             criterion = other.criteria[name]
@@ -58,14 +68,20 @@ class StudyNode:
 
     def __init__(self, study):
         self.study = study
-        self.dependencies = [] #TODO: change this to be a boolean to be more efficient
+        self.dependencies = []  # TODO: change this to be a boolean to be more efficient
         self.dependers = []
         self.recursive_dependers = 0
 
-    def _compute_recursive_dependenders(self):
+    def _compute_recursive_dependers(self):
         for depender in self.dependers:
-            self.recursive_dependers += depender._compute_recursive_dependers()
+            self.recursive_dependers += 1 + depender._compute_recursive_dependers()  # Need the +1 for the depender itself
         return self.recursive_dependers
+
+    def __lt__(self, other):
+        if len(self.study.criteria) < len(other.study.criteria):
+            return True
+        else:
+            return other.study.has_dependency(self.study)
 
 
 # TODO: On a different branch, try building the graph based on criteria dependencies and not based on studies
@@ -85,38 +101,35 @@ class StudyGraph:
         self._rebuild_graph()
 
     def _rebuild_graph(self):
-        # structure: look for the study with fewest criteria and build from there
-        checked = set()
+        self._construct_connections()
+        self._find_roots()
+        self._compute_all_dependencies()
+
+    def _construct_connections(self):
         for node in self.nodes:
             node.dependencies.clear()
             node.dependers.clear()
 
-        next_nodes = self._get_next_nodes(checked)
-        while len(next_nodes) > 0:
-            for node in next_nodes:
-                self._build_dependencies(node)
-            next_nodes = self._get_next_nodes(checked)
-
-    def _construct_connections(self):
-        pass
-
-    def _find_roots(self):
+        # structure: created priority queue by fewest criteria using custom comparator
+        node_queue = []
         for node in self.nodes:
-            if not node.dependencies:
-                self.roots.append(node)
+            heappush(node_queue, node)
 
-    def _compute_all_dependencies(self):
-        for root in self.roots:
-            for depender in root.dependers:
-                root.recursive_dependers += depender._compute_recursive_dependers()
+        while len(node_queue) > 0:
+            self._build_dependencies(node_queue.pop(), node_queue)
 
 
-    def _build_dependencies(self, dependency_node):
-        for node in self.nodes:
-            if node is not dependency_node:
-                if node.study.has_dependency(dependency_node.study):
-                    node.dependencies.append(dependency_node)
-                    dependency_node.dependers.append(node)
+    def _build_dependencies(self, dependent_node, node_queue):
+        tmp_study_copy = dependent_node.study.get_temp_copy_for_criteria()
+        for node in node_queue:
+            if len(node.study.criteria) > len(tmp_study_copy.criteria): # We've eliminated a lot of criteria, gotta move forward
+                continue
+            if tmp_study_copy.has_dependency(node.study):  # Because of sorted order, there cannot be a dependency in the other direction
+                node.dependers.append(dependent_node)
+                dependent_node.dependencies.append(node)
+                tmp_study_copy.eliminate_dependency_criteria(node.study)
+                if len(tmp_study_copy.criteria) == 0:
+                    return  # There are no criteria left, we've matched everything
 
     def _get_next_nodes(self, checked):
         next_nodes = []
@@ -133,3 +146,13 @@ class StudyGraph:
         for node in next_nodes:
             checked.add(node)
         return next_nodes
+
+    def _find_roots(self):
+        for node in self.nodes:
+            if not node.dependencies:  # Checks if empty i.e. no dependencies i.e. a root
+                self.roots.append(node)
+
+    def _compute_all_dependencies(self):
+        for root in self.roots:
+            for depender in root.dependers:
+                root.recursive_dependers += depender._compute_recursive_dependers()

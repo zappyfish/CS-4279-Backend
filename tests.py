@@ -1,9 +1,11 @@
 import random
 from data import *
+from queries import *
 
 CONDITION_BOOL = 1
 CONDITION_RANGE = 2
 CONDITION_VALUE = 3
+
 
 class TestPatient:
 
@@ -12,8 +14,18 @@ class TestPatient:
         self.range_vals = range_vals
         self.option_vals = option_vals
 
-    def matches(self, criterion):
-
+    def matches(self, query):
+        form = query.get_form()
+        for key in form:
+            if key in self.conditions:
+                continue
+            elif key in self.range_vals and form[key].meets(self.range_vals[key]):
+                continue
+            elif key in self.option_vals and form[key].meets(self.option_vals[key]):
+                continue
+            else:
+                return False
+        return True
 
 
 def get_test_condition_names():
@@ -56,7 +68,7 @@ def get_test_condition_value_pairs():
 
 def get_test_graph():
     studies = []
-    for i in range(10):
+    for i in range(10000):
         studies.append(StudyNode(get_random_study(i)))
     graph = StudyGraph()
     graph.add_study_nodes(studies)
@@ -106,17 +118,30 @@ def get_value_pairs(conditions):
 
 
 def get_random_criteria(test_conditions, test_range_pairs, test_value_pairs):
-    selection = random.randint(1, 3)
-    if selection == CONDITION_VALUE and len(test_value_pairs) == 0:
-        selection = CONDITION_BOOL
-    elif selection == CONDITION_RANGE and len(test_range_pairs) == 0:
-        selection = CONDITION_BOOL
-    if selection == CONDITION_BOOL and len(test_conditions) > 0:
+    selection = get_selection(test_conditions, test_range_pairs, test_value_pairs)
+
+    if selection == CONDITION_BOOL:
         return get_criterion_bool(test_conditions)
-    elif len(test_conditions) == 0 or (selection == CONDITION_RANGE and len(test_range_pairs) > 0):
+    elif selection == CONDITION_RANGE:
         return get_criterion_pairs(test_range_pairs)
     else:
         return get_value_pairs(test_value_pairs)
+
+
+def get_selection(test_conditions, test_range_pairs, test_value_pairs):
+    selections = []
+
+    if len(test_conditions) > 0:
+        selections.append(CONDITION_BOOL)
+    if len(test_range_pairs) > 0:
+        selections.append(CONDITION_RANGE)
+    if len(test_value_pairs) > 0:
+        selections.append(CONDITION_VALUE)
+
+    num_options = len(selections)
+    selection = random.randint(1, num_options)
+
+    return selections[selection - 1]
 
 
 def get_test_patient():
@@ -141,5 +166,12 @@ def get_test_patient():
 def test_session():
     test_graph = get_test_graph()
     patient = get_test_patient()
+    session = GraphSession(test_graph)
+    while not session.is_done():
+        query = session.get_next_query()
+        session.handle_response(patient.matches(query))
+    matched_studies = session.get_matches()
+    return matched_studies
+
 
 test_session()
