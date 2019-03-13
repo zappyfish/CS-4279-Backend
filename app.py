@@ -6,7 +6,7 @@ from tests import get_test_graph
 from queries import *
 import uuid
 
-TEST_GRAPH_SIZE = 1000
+TEST_GRAPH_SIZE = 500
 
 app = Flask(__name__)
 
@@ -62,7 +62,6 @@ def continue_session():
         matches = session.get_matches_payload()
         # TODO: turn this into usable JSON
         return jsonify({
-            'key': key,
             'done': True,
             'matches': matches,
         })
