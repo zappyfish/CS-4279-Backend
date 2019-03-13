@@ -66,9 +66,9 @@ def get_test_condition_value_pairs():
     }
 
 
-def get_test_graph():
+def get_test_graph(num_studies=1000):
     studies = []
-    for i in range(1000):
+    for i in range(num_studies):
         studies.append(StudyNode(get_random_study(i)))
     graph = StudyGraph()
     graph.add_study_nodes(studies)
@@ -98,8 +98,8 @@ def get_criterion_bool(conditions):
     ind = random.randint(0, len(conditions) - 1)
     condition = conditions[ind]
     del conditions[ind]
-    val = random.randint(0, 1) == 1
-    return Criterion(condition, val)
+    has_condition = random.randint(0, 1) == 1
+    return Criterion(condition, has_condition)
 
 
 def get_criterion_pairs(conditions):
@@ -114,7 +114,7 @@ def get_value_pairs(conditions):
     condition, options = random.choice(list(conditions.items()))
     del conditions[condition]
     val = options[random.randint(0, len(options) - 1)]
-    return Criterion(condition, val)
+    return EnumCriterion(condition, val)
 
 
 def get_random_criteria(test_conditions, test_range_pairs, test_value_pairs):
@@ -174,4 +174,4 @@ def test_session():
     return matched_studies
 
 
-test_session()
+# test_session()

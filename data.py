@@ -1,7 +1,24 @@
 from heapq import *
 import time
 
+
 class Criterion:
+
+    def __init__(self, name, has_condition):
+        self.name = name
+        self.has_condition = has_condition
+
+    def meets(self, value):
+        return value == self.name
+
+    def depends_on(self, other):
+        return other.name == self.name and other.has_condition == self.has_condition
+
+    def get_payload_pair(self):
+        return 'condition', {'name': self.name, 'state': self.has_condition}
+
+
+class EnumCriterion:
 
     def __init__(self, name, value):
         self.name = name
@@ -11,7 +28,10 @@ class Criterion:
         return value == self.value
 
     def depends_on(self, other):
-        return other.value == self.value
+        return other.name == self.name and other.value == self.value
+
+    def get_payload_pair(self):
+        return 'enum', {'name': self.name, 'value': self.value}
 
 
 class RangeCriterion:
@@ -25,7 +45,10 @@ class RangeCriterion:
         return self.min <= value <= self.max
 
     def depends_on(self, other):
-        return other.min <= self.min <= self.max <= other.max
+        return other.name == self.name and other.min <= self.min <= self.max <= other.max
+
+    def get_payload_pair(self):
+        return 'range', {'name': self.name, 'min': self.min, 'max': self.max}
 
 
 class Study:
@@ -38,12 +61,17 @@ class Study:
         self.criteria = { criterion.name: criterion for criterion in criteria }
 
     def generate_payload(self):
+        criteria = {}
+        for criterion in self.criteria:
+            key, val = self.criteria[criterion].get_payload_pair()
+            criteria[key] = val
+
         return {
             'name': self.name,
             'institution': self.institution,
             'researcher': self.researcher,
             'description': self.full_description,
-            'criteria': self.criteria,
+            'criteria': criteria,
         }
 
     def get_temp_copy_for_criteria(self):
@@ -121,7 +149,7 @@ class StudyGraph:
 
     def _build_dependencies(self, dependent_node, node_queue):
         tmp_study_copy = dependent_node.study.get_temp_copy_for_criteria()
-        for node in node_queue:
+        for node in reversed(node_queue):  # Need to go from most criteria to fewest
             if len(node.study.criteria) > len(tmp_study_copy.criteria): # We've eliminated a lot of criteria, gotta move forward
                 continue
             if tmp_study_copy.has_dependency(node.study):  # Because of sorted order, there cannot be a dependency in the other direction
