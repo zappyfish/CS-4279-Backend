@@ -1,7 +1,6 @@
 from heapq import *
 import time
 
-
 class Criterion:
 
     def __init__(self, name, has_condition):
@@ -15,7 +14,7 @@ class Criterion:
         return other.name == self.name and other.has_condition == self.has_condition
 
     def get_payload_pair(self):
-        return 'condition', {'name': self.name, 'state': self.has_condition}
+        return self.name, {'type': 'condition', 'state': self.has_condition}
 
 
 class EnumCriterion:
@@ -31,7 +30,7 @@ class EnumCriterion:
         return other.name == self.name and other.value == self.value
 
     def get_payload_pair(self):
-        return 'enum', {'name': self.name, 'value': self.value}
+        return self.name, {'type': 'enum', 'value': self.value}
 
 
 class RangeCriterion:
@@ -48,7 +47,7 @@ class RangeCriterion:
         return other.name == self.name and other.min <= self.min <= self.max <= other.max
 
     def get_payload_pair(self):
-        return 'range', {'name': self.name, 'min': self.min, 'max': self.max}
+        return self.name, {'type': 'range', 'min': self.min, 'max': self.max}
 
 
 class Study:
@@ -58,11 +57,11 @@ class Study:
         self.institution = institution
         self.researcher = researcher
         self.full_description = full_description
-        self.criteria = { criterion.name: criterion for criterion in criteria }
+        self.criteria = {criterion.name: criterion for criterion in criteria }
 
     def generate_payload(self):
         criteria = {}
-        for criterion in self.criteria:
+        for num, criterion in enumerate(self.criteria):
             key, val = self.criteria[criterion].get_payload_pair()
             criteria[key] = val
 

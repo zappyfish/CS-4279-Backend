@@ -6,7 +6,7 @@ from tests import get_test_graph
 from queries import *
 import uuid
 
-TEST_GRAPH_SIZE = 500
+TEST_GRAPH_SIZE = 20000
 
 app = Flask(__name__)
 
@@ -16,6 +16,7 @@ study_matcher = StudyMatcher()
 validation = ValidationManager()
 key_session_map = {}
 graph = get_test_graph(TEST_GRAPH_SIZE)
+
 
 @app.route('/studies/check', methods=['GET'])
 def check_for_studies():
@@ -55,7 +56,7 @@ def continue_session():
             matches = []
         session.handle_response(matches)  # match numbers are comma-separated
     if session.is_done():
-        print("took " + str(session.query_count) + " queries to complete")
+        print("took " + str(session.query_count) + " batch packets to complete")
         print(str(session.queried_node_count) + " nodes were queried out of " + str(TEST_GRAPH_SIZE))
         # remove the session
         del key_session_map[key]
@@ -72,6 +73,13 @@ def continue_session():
             'done': False,
             'query': query_form,
         })
+
+
+@app.route('/graph/all', methods=['GET'])
+def get_all_nodes():
+    global graph
+    session = GraphSession(graph)
+    return jsonify(session.get_phone_matching_payload())
 
 
 if __name__ == "__main__":

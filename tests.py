@@ -1,6 +1,8 @@
 import random
 from data import *
 from queries import *
+import requests
+import time
 
 CONDITION_BOOL = 1
 CONDITION_RANGE = 2
@@ -16,13 +18,28 @@ class TestPatient:
 
     def matches(self, query):
         form = query.get_form()
+        return self.matches_json(form)
+
+    def matches_json(self, form):
         for key in form:
             if key in self.conditions:
-                continue
-            elif key in self.range_vals and form[key].meets(self.range_vals[key]):
-                continue
-            elif key in self.option_vals and form[key].meets(self.option_vals[key]):
-                continue
+                has = form[key]['state']
+                if has != key in self.conditions:
+                    return False
+                else:
+                    continue
+            elif key in self.range_vals:
+                crit = RangeCriterion(key, form[key]['min'], form[key]['max'])
+                if crit.meets(self.range_vals[key]):
+                    continue
+                else:
+                    return False
+            elif key in self.option_vals:
+                crit = EnumCriterion(key, form[key]['value'])
+                if crit.meets(self.option_vals[key]):
+                    continue
+                else:
+                    return False
             else:
                 return False
         return True
@@ -174,4 +191,59 @@ def test_session():
     return matched_studies
 
 
+def test_phone_matching_data_usage(patient):
+    t0 = time.time()
+    url = "http://127.0.0.1:5000/graph/all"
+    r = requests.get(url)
+    j = r.json()
+    queries = j['query']
+    num_matches = 0
+    matches = {}
+    for key in queries:
+        query = queries[key]
+        if patient.matches_json(query):
+            num_matches += 1
+            matches[num_matches - 1] = query
+    print("num_matches: " + str(num_matches))
+    print("size of requests for phone matching: " + str(len(r.content) / 1024) + " kB")
+    print("phone matching took: " + str(time.time() - t0))
+    print("---------------")
+    return matches
+
+
+def test_server_matching_data_usage(patient):
+    t0 = time.time()
+    session = "http://127.0.0.1:5000/session/start"
+    key = requests.get(session).json()['key']
+    data = {"key": key}
+    url = "http://127.0.0.1:5000/session/check"
+    r = requests.get(url, data)
+    j = r.json()
+    size = 0
+    while not j['done']:
+        size += len(r.content)
+        queries = j['query']
+        matches = ""
+        for key in queries:
+            query = queries[key]
+            if patient.matches_json(query):
+                if len(matches) > 0:
+                    matches += ","
+                matches += key
+        data["matches"] = matches
+        j = requests.get(url, data).json()
+    m = j["matches"]
+    res = {num: j["matches"][key]["criteria"] for num, key in enumerate(j["matches"])}
+    print("num matches:" + str(len(j["matches"])))
+    print("size of requests for server matching: " + str(size / 1024) + " kB")
+    print("server matching took: " + str(time.time() - t0))
+    return res
+
+
+
 # test_session()
+if __name__ == '__main__':
+    patient = get_test_patient()
+    a = test_phone_matching_data_usage(patient)
+    b = test_server_matching_data_usage(patient)
+    pass
